@@ -12,3 +12,9 @@ rhv_endpoint: https://rhevm.lab1.bandwidthclec.local/ovirt-engine/api
 rhv_username: rhvAdminUser
 rhv_domain: Bandwidth Directory
 rhv_password: 5uP3Rs3CuR3!
+
+## This should be a mount path that is accessible by both the chosen
+## RHV hypervisor, as well as the chosen ESXi hosts. Only needs to be
+## as large as your largest migration batch, completed VMs should be
+## storage vmotioned to the appropriate datastore.
+nfs_mount_path: 192.168.1.100:/vmware_migration

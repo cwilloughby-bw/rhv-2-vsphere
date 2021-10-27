@@ -12,7 +12,7 @@
 
     - name: Mount vmware_migration volume locally to RHV host
       mount:
-        src: 192.168.111.145:/vmware_migration
+        src: "{{ nfs_mount_path }}"
         path: /mnt/vmware_migration
         boot: no
         state: mounted
