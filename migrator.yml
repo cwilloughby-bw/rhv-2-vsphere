@@ -1,0 +1,225 @@
+- name: Mount vmware_migration volume
+  hosts: rhvhost
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Create a directory for the vmware_migration volume
+      ansible.builtin.file:
+        path: /mnt/vmware_migration
+        state: directory
+        mode: '0755'
+
+    - name: Mount vmware_migration volume locally to RHV host
+      mount:
+        src: 192.168.111.145:/vmware_migration
+        path: /mnt/vmware_migration
+        boot: no
+        state: mounted
+        fstype: nfs
+        opts: vers=3
+
+    - name: Collect common data from RHV
+      block:
+        - name: Obtain SSO token with using username/password credentials
+          ovirt_auth:
+            url: "{{ rhv_endpoint }}"
+            username: "{{ rhv_username }}@{{ rhv_domain }}"
+            password: "{{ rhv_password }}"
+            insecure: true
+
+        - ovirt.ovirt.ovirt_vnic_profile_info:
+            auth: "{{ ovirt_auth }}"
+          register: rhv_vnic_profiles
+        - set_fact: rhv_vnic_profiles="{{ rhv_vnic_profiles }}"
+
+      always:
+        - name: Always revoke the SSO token
+          ovirt_auth:
+            state: absent
+            ovirt_auth: "{{ ovirt_auth }}"
+
+- name: Ensure source VM has vmware-tools installed
+  hosts: vmsToMigrate
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Install open-vm-tools on source VM
+      ansible.builtin.yum:
+        name: open-vm-tools
+        state: latest
+
+## These are a few ugly shell commands, I'd like to move these to a more proper ansible fashion
+## For this shell command specifically, I can't use copy due to the env vars, afaik. Could probably
+## pull that from the facts??
+    - name: Backup existing initramfs
+      ansible.builtin.shell: cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img-old
+
+    - name: Reconfigure initramfs to support VMWare Paravirtual + LSILogic controllers
+      ansible.builtin.shell: dracut  -f -v --add-drivers "mptspi scsi_transport_spi mptsas mptscsih mptbase scsi_transport_sas vmw_pvscsi" /boot/initramfs-$(uname -r).img $(uname -r)
+
+## Not gonna lie, this is pretty jank/lazy. On every attempt, the source VMs main interface was eth0,
+## and the target ended up having ens192. Sooooo, we just copy the config, and change the target
+## interface name. This only sets up the first NIC, additional NICs will need someone to manually
+## perform that process.
+    - name: Copy existing network configuration
+      ansible.builtin.copy:
+        remote_src: yes
+        src: /etc/sysconfig/network-scripts/ifcfg-eth0
+        dest: /etc/sysconfig/network-scripts/ifcfg-ens192
+
+## inb4 Bitt roasts me for not using an actual RegEx here
+    - name: Update network adapter name in new configuration
+      ansible.builtin.replace:
+        path: /etc/sysconfig/network-scripts/ifcfg-ens192
+        regexp: eth0
+        replace: ens192
+
+- name: Build skeleton VM on vSphere
+  hosts: vmsToMigrate
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - name: Collect VM specifications from RHV
+      block:
+        - name: Obtain SSO token with using username/password credentials
+          ovirt_auth:
+            url: "{{ rhv_endpoint }}"
+            username: "{{ rhv_username }}@{{ rhv_domain }}"
+            password: "{{ rhv_password }}"
+            insecure: true
+
+        - ovirt.ovirt.ovirt_vm_info:
+            auth: "{{ ovirt_auth }}"
+            pattern: "{{ inventory_hostname }}"
+            next_run: true
+          register: rhv_vm
+        - set_fact: vm_name="{{rhv_vm.ovirt_vms[0].name}}"
+
+        - ovirt.ovirt.ovirt_nic_info:
+            auth: "{{ ovirt_auth }}"
+            vm: "{{ rhv_vm.ovirt_vms[0].name }}"
+            name: "*"
+            fetch_nested: yes
+            nested_attributes:
+              - vnic_profiles
+          register: rhv_vm_nics
+
+        - ovirt.ovirt.ovirt_disk_info:
+            auth: "{{ ovirt_auth }}"
+            pattern: "{{ rhv_vm.ovirt_vms[0].name }}"
+          register: rhv_vm_disks
+        - set_fact: rhv_vm_disk_info="{{rhv_vm_disks.ovirt_disks}}"
+
+## All this, just to get the datacenter ID, which should've just been included in the VM response
+        - ovirt.ovirt.ovirt_cluster_info:
+            auth: "{{ ovirt_auth }}"
+          register: rhv_clusters
+        - set_fact: rhv_vm_datacenter_id="{{item.data_center.id}}"
+          loop: "{{ rhv_clusters.ovirt_clusters }}"
+          loop_control:
+            label: "{{item.name}}"
+          when: item.id == rhv_vm.ovirt_vms[0].cluster.id
+
+      always:
+        - name: Always revoke the SSO token
+          ovirt_auth:
+            state: absent
+            ovirt_auth: "{{ ovirt_auth }}"
+
+    - name: Create target VM in vCenter
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_endpoint }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        folder: /Migrated Virtual Machines
+        datastore: lab-dsc-workload
+        datacenter: "{{ vcenter_datacenter }}"
+        cluster: lab1-silver
+        name: "{{ rhv_vm.ovirt_vms[0].name }}"
+        guest_id: centos64Guest
+        hardware:
+          boot_firmware: bios
+          hotadd_cpu: yes
+          hotadd_memory: yes
+          # yOu HaVe A pRoBlEm WiTh PrEcIsIoN?
+          memory_mb: "{{ (rhv_vm.ovirt_vms[0].memory / 1024 / 1024) | int }}"
+          num_cpus: "{{ rhv_vm.ovirt_vms[0].cpu.topology.sockets }}"
+          scsi: paravirtual
+      register: vmware_vm
+    - set_fact: vmware_vm_info="{{vmware_vm.instance}}"
+
+    - name: Configure target VM network adapters
+      include_tasks: fragments/configure_network_adapters.yml
+      loop: "{{ rhv_vm_nics.ovirt_nics }}"
+      loop_control:
+        label: "{{adapter.name}}"
+        index_var: loop_index
+        loop_var: adapter
+
+- name: The Main Event
+  hosts: vmsToMigrate
+  gather_facts: false
+  strategy: free
+
+  tasks:
+    - name: Start Migration
+      block:
+      - name: Obtain RHV SSO token with using username/password credentials
+        ovirt_auth:
+          url: "{{ rhv_endpoint }}"
+          username: "{{ rhv_username }}@{{ rhv_domain }}"
+          password: "{{ rhv_password }}"
+          insecure: true
+        delegate_to: localhost
+
+      - name: Stop the source VM
+        ovirt.ovirt.ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          state: stopped
+          name: "{{ vm_name }}"
+        delegate_to: localhost
+
+      - name: Convert and Attach disks to target VM
+        include_tasks: fragments/convert_and_import_disk.yml
+        loop: "{{rhv_vm_disk_info}}"
+        loop_control:
+          label: "{{item.id}}"
+          index_var: loop_index
+
+      - name: Power up the target VM
+        community.vmware.vmware_guest:
+          hostname: "{{ vcenter_endpoint }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: false
+          datacenter: "{{ vcenter_datacenter }}"
+          name: "{{ vmware_vm_info.hw_name }}"
+          state: poweredon
+          wait_for_ip_address: yes
+        delegate_to: localhost
+
+      - name: Stop the source VM
+        ovirt.ovirt.ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          comment: "Migrated to vSphere"
+          name: "{{ vm_name }}"
+        delegate_to: localhost
+      rescue:
+        - name: Start source VM due to migration failure
+          ovirt.ovirt.ovirt_vm:
+            auth: "{{ ovirt_auth }}"
+            state: running
+            name: "{{ vm_name }}"
+          delegate_to: localhost
+        - ansible.builtin.fail:
+            msg: "Something went wrong while attempting to migrate {{ vm_name }}, the source VM has been powered back up."
+      always:
+        - name: Always revoke the RHV SSO token
+          ovirt_auth:
+            state: absent
+            ovirt_auth: "{{ ovirt_auth }}"
+          delegate_to: localhost

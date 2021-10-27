@@ -1,0 +1,4 @@
+## Again, this may or may not be necessary if you have your ESXi hosts enrolled
+## in AD. This user will need to be able to run "vmkfstools" commands.
+ansible_ssh_user: root
+ansible_ssh_pass: 5uP3Rs3CuR3!

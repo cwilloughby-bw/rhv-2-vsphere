@@ -1,0 +1,5 @@
+## This may or may not be neccesary depending on if your RHV hypervisors
+## are enrolled in IDM. At a minimum, this user will need to be able to
+## mount an NFS volume on the host, and run "qemu-img" commands.
+ansible_ssh_user: root
+ansible_ssh_pass: 5uP3Rs3CuR3!

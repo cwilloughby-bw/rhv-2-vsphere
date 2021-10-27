@@ -1,0 +1,23 @@
+## Loop through all of the RHV vNIC profiles we collected earlier, and find
+## the one that this adapter is associated with.
+- set_fact: network_name="{{ item.name }}"
+  loop: "{{ hostvars[groups['rhvhost'][0]].rhv_vnic_profiles.ovirt_vnic_profiles }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.id == adapter.vnic_profile.id
+
+## This task makes some assumptions. For starters, it assumes that your dvswitch
+## is named "DATACENTER-dvswitch". It also assumes that all of your portgroups are
+## named identical to the vnicprofile in RHV. It might make more sense to change the
+## task to match on the VLAN ID instead of the name, but this worked for our migration.
+- name: Add network adapter to VM
+  community.vmware.vmware_guest_network:
+    hostname: "{{ vcenter_endpoint }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: false
+    datacenter: "{{ vcenter_datacenter }}"
+    moid: "{{ vmware_vm_info.moid }}"
+    switch: "{{ vcenter_datacenter }}-dvswitch"
+    start_connected: yes
+    network_name: "{{ network_name }}"

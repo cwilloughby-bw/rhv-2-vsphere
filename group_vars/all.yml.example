@@ -1,0 +1,14 @@
+## These credentials don't necessarily need to be for the SSO admin,
+## they can be for any user that has permission to create a VM + consume
+## datastores and networks.
+vcenter_endpoint: vcenter.lab1.bwnet.us
+vcenter_username: rhvAdminUser
+vcenter_password: 5uP3Rs3CuR3!
+vcenter_datacenter: lab
+
+## Same as with vCenter, these don't need to be admin creds, they just
+## need to be able to power cycle VMs, and update the comments.
+rhv_endpoint: https://rhevm.lab1.bandwidthclec.local/ovirt-engine/api
+rhv_username: rhvAdminUser
+rhv_domain: Bandwidth Directory
+rhv_password: 5uP3Rs3CuR3!

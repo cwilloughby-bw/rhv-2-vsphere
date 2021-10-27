@@ -1,0 +1,5 @@
+## These might not be necessary depending on how you're running the playbook.
+## In my case, I was running it in a docker container, and hadn't passed through
+## my SSH key, so I manually specified my IDM user/pass.
+ansible_ssh_user: serverAdmin
+ansible_ssh_pass: 5uP3Rs3CuR3!

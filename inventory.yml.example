@@ -1,0 +1,23 @@
+## The "qemu-img convert" command that we run is single threaded, so it doesn't
+## have much of a risk of impacting the hypervisor you've chosen. With that being
+## said, it might still make sense to put it in maintenance mode for the duration
+## of the play. It's also NOT a requirement that the HV you choose is running the
+## VMs you plan to migrate. In fact, it could just be any linux server that has all
+## the right datastores mounted.
+all:
+  children:
+    rhvhost:
+      hosts:
+        ## This should be a SINGLE RHV host, it will be in charge of converting
+        ## the existing RAW disk image from RHV.
+    esxihost:
+      hosts:
+        ## This should be a SINGLE ESXi host, it will be in charge of inflating
+        ## the new VMDK.
+    vmsToMigrate:
+      hosts:
+        ## This should be a list of all the VMs you want to migrate in this batch.
+        ## WARNING: All the VMs in this list will be powered down simultaneously,
+        ## and powered back up as soon as their disk has been converted. Don't
+        ## put redundant systems in this list, or you're gonna have a really fun
+        ## time explaining that in an RCA meeting.
