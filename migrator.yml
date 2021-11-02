@@ -27,10 +27,12 @@
             username: "{{ rhv_username }}@{{ rhv_domain }}"
             password: "{{ rhv_password }}"
             insecure: true
+          delegate_to: localhost
 
         - ovirt.ovirt.ovirt_vnic_profile_info:
             auth: "{{ ovirt_auth }}"
           register: rhv_vnic_profiles
+          delegate_to: localhost
         - set_fact: rhv_vnic_profiles="{{ rhv_vnic_profiles }}"
 
       always:
@@ -38,6 +40,7 @@
           ovirt_auth:
             state: absent
             ovirt_auth: "{{ ovirt_auth }}"
+          delegate_to: localhost
 
 - name: Ensure source VM has vmware-tools installed
   hosts: vmsToMigrate
@@ -202,7 +205,7 @@
           wait_for_ip_address: yes
         delegate_to: localhost
 
-      - name: Stop the source VM
+      - name: Annotate the source VM
         ovirt.ovirt.ovirt_vm:
           auth: "{{ ovirt_auth }}"
           comment: "Migrated to vSphere"
