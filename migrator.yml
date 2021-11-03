@@ -139,9 +139,9 @@
         password: "{{ vcenter_password }}"
         validate_certs: false
         folder: /Migrated Virtual Machines
-        datastore: lab-dsc-workload
+        datastore: "{{ vcenter_datastore }}"
         datacenter: "{{ vcenter_datacenter }}"
-        cluster: lab1-silver
+        cluster: "{{ vcenter_cluster }}"
         name: "{{ rhv_vm.ovirt_vms[0].name }}"
         guest_id: centos64Guest
         hardware:

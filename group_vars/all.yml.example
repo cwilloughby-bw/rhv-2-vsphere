@@ -5,6 +5,9 @@ vcenter_endpoint: vcenter.lab1.bwnet.us
 vcenter_username: rhvAdminUser
 vcenter_password: 5uP3Rs3CuR3!
 vcenter_datacenter: lab
+vcenter_cluster:
+## This is the datastore where the initial VM configuration files should end up.
+vcenter_datastore:
 
 ## Same as with vCenter, these don't need to be admin creds, they just
 ## need to be able to power cycle VMs, and update the comments.
