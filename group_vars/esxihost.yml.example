@@ -2,3 +2,4 @@
 ## in AD. This user will need to be able to run "vmkfstools" commands.
 ansible_ssh_user: root
 ansible_ssh_pass: 5uP3Rs3CuR3!
+ansible_python_interpreter: /usr/bin/python
