@@ -21,3 +21,10 @@ all:
         ## and powered back up as soon as their disk has been converted. Don't
         ## put redundant systems in this list, or you're gonna have a really fun
         ## time explaining that in an RCA meeting.
+      children:
+        no_guest_preparation:
+          hosts:
+            ## The above comment remains true, but any hosts in this list will
+            ## not have any guest preparation steps (vmtools install, network/bootloader config)
+            ## performed. This might be desireable for Windows hosts, where you've already
+            ## performed that work.

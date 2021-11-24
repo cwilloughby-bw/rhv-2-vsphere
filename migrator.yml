@@ -43,41 +43,14 @@
           delegate_to: localhost
 
 - name: Ensure source VM has vmware-tools installed
-  hosts: vmsToMigrate
+  hosts: vmsToMigrate:!no_guest_preparation
   become: true
-  gather_facts: false
+  gather_facts: true
 
   tasks:
-    - name: Install open-vm-tools on source VM
-      ansible.builtin.yum:
-        name: open-vm-tools
-        state: latest
-
-## These are a few ugly shell commands, I'd like to move these to a more proper ansible fashion
-## For this shell command specifically, I can't use copy due to the env vars, afaik. Could probably
-## pull that from the facts??
-    - name: Backup existing initramfs
-      ansible.builtin.shell: cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img-old
-
-    - name: Reconfigure initramfs to support VMWare Paravirtual + LSILogic controllers
-      ansible.builtin.shell: dracut  -f -v --add-drivers "mptspi scsi_transport_spi mptsas mptscsih mptbase scsi_transport_sas vmw_pvscsi" /boot/initramfs-$(uname -r).img $(uname -r)
-
-## Not gonna lie, this is pretty jank/lazy. On every attempt, the source VMs main interface was eth0,
-## and the target ended up having ens192. Sooooo, we just copy the config, and change the target
-## interface name. This only sets up the first NIC, additional NICs will need someone to manually
-## perform that process.
-    - name: Copy existing network configuration
-      ansible.builtin.copy:
-        remote_src: yes
-        src: /etc/sysconfig/network-scripts/ifcfg-eth0
-        dest: /etc/sysconfig/network-scripts/ifcfg-ens192
-
-## inb4 Bitt roasts me for not using an actual RegEx here
-    - name: Update network adapter name in new configuration
-      ansible.builtin.replace:
-        path: /etc/sysconfig/network-scripts/ifcfg-ens192
-        regexp: eth0
-        replace: ens192
+    - name: Run guest-specific migration preparation
+      ansible.builtin.include_role:
+        name: guest_preparation
 
 - name: Build skeleton VM on vSphere
   hosts: vmsToMigrate
@@ -171,17 +144,13 @@
   tasks:
     - name: Start Migration
       block:
-      - name: Obtain RHV SSO token with using username/password credentials
-        ovirt_auth:
-          url: "{{ rhv_endpoint }}"
-          username: "{{ rhv_username }}@{{ rhv_domain }}"
-          password: "{{ rhv_password }}"
-          insecure: true
-        delegate_to: localhost
-
       - name: Stop the source VM
         ovirt.ovirt.ovirt_vm:
-          auth: "{{ ovirt_auth }}"
+          auth:
+            url: "{{ rhv_endpoint }}"
+            username: "{{ rhv_username }}@{{ rhv_domain }}"
+            password: "{{ rhv_password }}"
+            insecure: true
           state: stopped
           name: "{{ vm_name }}"
         delegate_to: localhost
@@ -207,22 +176,27 @@
 
       - name: Annotate the source VM
         ovirt.ovirt.ovirt_vm:
-          auth: "{{ ovirt_auth }}"
+          auth:
+            url: "{{ rhv_endpoint }}"
+            username: "{{ rhv_username }}@{{ rhv_domain }}"
+            password: "{{ rhv_password }}"
+            insecure: true
           comment: "Migrated to vSphere"
           name: "{{ vm_name }}"
         delegate_to: localhost
       rescue:
         - name: Start source VM due to migration failure
           ovirt.ovirt.ovirt_vm:
-            auth: "{{ ovirt_auth }}"
+            auth:
+              url: "{{ rhv_endpoint }}"
+              username: "{{ rhv_username }}@{{ rhv_domain }}"
+              password: "{{ rhv_password }}"
+              insecure: true
             state: running
             name: "{{ vm_name }}"
           delegate_to: localhost
         - ansible.builtin.fail:
             msg: "Something went wrong while attempting to migrate {{ vm_name }}, the source VM has been powered back up."
       always:
-        - name: Always revoke the RHV SSO token
-          ovirt_auth:
-            state: absent
-            ovirt_auth: "{{ ovirt_auth }}"
-          delegate_to: localhost
+        - debug:
+            msg: "We would've removed the SSO token here"
