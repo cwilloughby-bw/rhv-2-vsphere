@@ -144,6 +144,16 @@
   tasks:
     - name: Start Migration
       block:
+      - name: Annotate the source VM
+        ovirt.ovirt.ovirt_vm:
+          auth:
+            url: "{{ rhv_endpoint }}"
+            username: "{{ rhv_username }}@{{ rhv_domain }}"
+            password: "{{ rhv_password }}"
+            insecure: true
+          comment: "Pending vSphere Migration"
+          name: "{{ vm_name }}"
+        delegate_to: localhost
       - name: Stop the source VM
         ovirt.ovirt.ovirt_vm:
           auth:
@@ -193,6 +203,16 @@
               password: "{{ rhv_password }}"
               insecure: true
             state: running
+            name: "{{ vm_name }}"
+          delegate_to: localhost
+        - name: Annotate the source VM
+          ovirt.ovirt.ovirt_vm:
+            auth:
+              url: "{{ rhv_endpoint }}"
+              username: "{{ rhv_username }}@{{ rhv_domain }}"
+              password: "{{ rhv_password }}"
+              insecure: true
+            comment: "Migration to vSphere failed"
             name: "{{ vm_name }}"
           delegate_to: localhost
         - ansible.builtin.fail:
