@@ -1,3 +1,7 @@
+- name: Kill any stuck instances of yum-cron
+  ansible.builtin.shell: "pkill yum-cron --oldest --echo"
+  ignore_errors: true
+
 - name: Install open-vm-tools on source VM
   ansible.builtin.package:
     name: open-vm-tools
