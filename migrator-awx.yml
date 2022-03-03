@@ -37,9 +37,9 @@
             ovirt_auth: "{{ ovirt_auth }}"
           delegate_to: localhost
 
-    - name: debug vm output
-      debug:
-        msg: "{{ preload_rhv_vm }}"
+    # - name: debug vm output
+    #   debug:
+    #     msg: "{{ preload_rhv_vm }}"
 
     - name: Add discovered VM to inventory
       ansible.builtin.add_host:
@@ -76,14 +76,10 @@
             username: "{{ rhv_username }}@{{ rhv_domain }}"
             password: "{{ rhv_password }}"
             insecure: true
-          delegate_to: localhost
-          become: false
 
         - ovirt.ovirt.ovirt_vnic_profile_info:
             auth: "{{ ovirt_auth }}"
           register: rhv_vnic_profiles
-          delegate_to: localhost
-          become: false
         - set_fact: rhv_vnic_profiles="{{ rhv_vnic_profiles }}"
 
       always:
@@ -91,8 +87,6 @@
           ovirt_auth:
             state: absent
             ovirt_auth: "{{ ovirt_auth }}"
-          delegate_to: localhost
-          become: false
 
 - name: Ensure source VM has vmware-tools installed
   hosts: vmsToMigrate:!no_guest_preparation

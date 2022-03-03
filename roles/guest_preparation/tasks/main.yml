@@ -1,5 +1,5 @@
-- debug:
-    msg: "{{ ansible_facts }}"
+# - debug:
+#     msg: "{{ ansible_facts }}"
 
 - name: Prepare RedHat-Based Guest
   import_tasks: redhat.yml
