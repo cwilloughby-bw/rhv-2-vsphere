@@ -26,7 +26,7 @@
 
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
-            pattern: "{{ inventory_hostname }}"
+            pattern: "{{ source_vm_name }}"
             next_run: true
           register: preload_rhv_vm
 
@@ -40,6 +40,12 @@
     - name: debug vm output
       debug:
         msg: "{{ preload_rhv_vm }}"
+
+    - name: Add discovered VM to inventory
+      ansible.builtin.add_host:
+        name: "{{ source_vm_name }}"
+        groups:
+          - vmsToMigrate
 
 - name: Mount vmware_migration volume
   hosts: rhvhost
