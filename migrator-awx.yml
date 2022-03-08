@@ -116,9 +116,6 @@
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
             pattern: "{{ inventory_hostname }}"
-            # fetch_nested: yes
-            # nested_attributes:
-            #   - disk_attachments
             follows:
               - disk_attachments.disk
           register: rhv_vm
@@ -217,7 +214,7 @@
 
       - name: Convert and Attach disks to target VM
         include_tasks: fragments/convert_and_import_disk.yml
-        loop: "{{rhv_vm_disk_info}}"
+        loop: "{{rhv_vm.ovirt_vms[0].disk_attachments}}"
         loop_control:
           label: "{{item.id}}"
           index_var: loop_index
