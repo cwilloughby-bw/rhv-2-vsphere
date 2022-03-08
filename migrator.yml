@@ -73,7 +73,8 @@
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
             pattern: "{{ inventory_hostname }}"
-            next_run: true
+            follows:
+              - disk_attachments.disk
           register: rhv_vm
         - set_fact: vm_name="{{rhv_vm.ovirt_vms[0].name}}"
 
@@ -85,12 +86,6 @@
             nested_attributes:
               - vnic_profiles
           register: rhv_vm_nics
-
-        - ovirt.ovirt.ovirt_disk_info:
-            auth: "{{ ovirt_auth }}"
-            pattern: "{{ rhv_vm.ovirt_vms[0].name }}"
-          register: rhv_vm_disks
-        - set_fact: rhv_vm_disk_info="{{rhv_vm_disks.ovirt_disks}}"
 
 ## All this, just to get the datacenter ID, which should've just been included in the VM response
         - ovirt.ovirt.ovirt_cluster_info:
