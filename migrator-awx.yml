@@ -116,7 +116,8 @@
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
             pattern: "{{ inventory_hostname }}"
-            follow: ['disk_attachments','nics']
+            follow: 
+              - disk_attachments.disk
             next_run: true
           register: rhv_vm
         - set_fact: vm_name="{{rhv_vm.ovirt_vms[0].name}}"
