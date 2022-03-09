@@ -46,8 +46,8 @@
     debug:
       msg:
         - "Real time taken to perform RAW to VMDK disk conversion: {{ async_conversion_result.stderr_lines[1] }}"
-        - "Original RAW image size (Bytes): {{ disk_raw_stats.stat.size }}"
-        - "Pre-Inflation VMDK image size (Bytes): {{ disk_pre_vmdk_stats.stat.size }}"
+        - "Original RAW image size (KB): {{ disk_raw_stats.stat.size / 1024 }}"
+        - "Pre-Inflation VMDK image size (KB): {{ disk_pre_vmdk_stats.stat.size / 1024 }}"
 
 ## All the "-i" flag really does is clone the VMDK, but it has the side-effect of inflating the VMDK
   - name: Inflate new VMDK
