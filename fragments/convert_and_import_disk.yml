@@ -24,7 +24,7 @@
 
   - name: Show debug info about the RAW to VMDK conversion
     debug:
-      var: async_conversion
+      var: async_conversion_result
 
 ## All the "-i" flag really does is clone the VMDK, but it has the side-effect of inflating the VMDK
   - name: Inflate new VMDK
