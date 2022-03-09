@@ -4,6 +4,12 @@
 ## "-pre" is suffixed here to indicate that it's pre-inflation. In testing, the inflation is required
 ## to be usable in VMWare. Supposedly it's not always required, but better safe than sorry.
 ## The image should be thinned back out once we do the storage vmotion anyways.
+  - name: Debug disk image path
+    debug:
+      msg: 
+        - "Processing image: /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
+        - "Output image: /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
+
   - name: Convert disk from RAW to VMDK
     shell: "time /usr/bin/qemu-img convert -f raw -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
     delegate_to: "{{ groups['rhvhost'][0] }}"
@@ -22,9 +28,24 @@
     retries: 240
     delay: 30
 
-  - name: Show debug info about the RAW to VMDK conversion
+  - name: Get stats of RAW image
+    ansible.builtin.stat:
+      path: "/rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
+    delegate_to: "{{ groups['rhvhost'][0] }}"
+    register: disk_raw_stats
+
+  - name: Get stats of pre-inflation VMDK image
+    ansible.builtin.stat:
+      path: "/mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
+    delegate_to: "{{ groups['rhvhost'][0] }}"
+    register: disk_pre-vmdk_stats
+
+  - name: Show migration stage 1 diagnostic info
     debug:
-      var: async_conversion_result
+      msg:
+        - "Real time taken to perform RAW to VMDK disk conversion: {{ async_conversion_result.stderr_lines[1] }}"
+        - "Original RAW image size (KB): {{ disk_raw_stats.stat.size / 1024 }}"
+        - "Pre-Inflation VMDK image size (KB): {{ disk_pre-vmdk_stats.stat.size / 1024 }}"
 
 ## All the "-i" flag really does is clone the VMDK, but it has the side-effect of inflating the VMDK
   - name: Inflate new VMDK
