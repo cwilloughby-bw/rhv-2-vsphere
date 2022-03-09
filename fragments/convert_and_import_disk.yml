@@ -45,7 +45,7 @@
   - name: Show migration stage 1 diagnostic info
     debug:
       msg:
-        - "Real time taken to perform RAW to VMDK disk conversion: {{ async_conversion_result.stderr_lines[1] }}"
+        - "Real time taken to perform RAW to VMDK disk conversion: {{ async_conversion_result.stderr_lines[1].split("t")[1] }}"
         - "Original RAW image size (KB): {{ disk_raw_stats.stat.size / 1024 }}"
         - "Pre-Inflation VMDK image size (KB): {{ disk_pre_vmdk_stats.stat.size / 1024 }}"
 
