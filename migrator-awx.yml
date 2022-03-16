@@ -68,27 +68,7 @@
         fstype: nfs
         opts: vers=3
 
-    - name: Collect common data from RHV
-      block:
-        - name: Obtain SSO token using username/password credentials
-          ovirt_auth:
-            url: "{{ rhv_endpoint }}"
-            username: "{{ rhv_username }}@{{ rhv_domain }}"
-            password: "{{ rhv_password }}"
-            insecure: true
-
-        - ovirt.ovirt.ovirt_vnic_profile_info:
-            auth: "{{ ovirt_auth }}"
-          register: rhv_vnic_profiles
-        - set_fact: rhv_vnic_profiles="{{ rhv_vnic_profiles }}"
-
-      always:
-        - name: Always revoke the SSO token
-          ovirt_auth:
-            state: absent
-            ovirt_auth: "{{ ovirt_auth }}"
-
-- name: Ensure source VM has vmware-tools installed
+- name: Prepare source VM for migration
   hosts: vmsToMigrate:!no_guest_preparation
   become: true
   gather_facts: true
@@ -118,17 +98,9 @@
             pattern: "{{ inventory_hostname }}"
             follows:
               - disk_attachments.disk
+              - nics.vnic_profile.network
           register: rhv_vm
         - set_fact: vm_name="{{rhv_vm.ovirt_vms[0].name}}"
-
-        - ovirt.ovirt.ovirt_nic_info:
-            auth: "{{ ovirt_auth }}"
-            vm: "{{ rhv_vm.ovirt_vms[0].name }}"
-            name: "*"
-            fetch_nested: yes
-            nested_attributes:
-              - vnic_profiles
-          register: rhv_vm_nics
 
 ## All this, just to get the datacenter ID, which should've just been included in the VM response
         - ovirt.ovirt.ovirt_cluster_info:
@@ -168,10 +140,19 @@
           scsi: paravirtual
       register: vmware_vm
     - set_fact: vmware_vm_info="{{vmware_vm.instance}}"
-
-    - name: Configure target VM network adapters
-      include_tasks: fragments/configure_network_adapters.yml
-      loop: "{{ rhv_vm_nics.ovirt_nics }}"
+      
+    - name: Add network adapter to VM
+      community.vmware.vmware_guest_network:
+        hostname: "{{ vcenter_endpoint }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        datacenter: "{{ vcenter_datacenter }}"
+        moid: "{{ vmware_vm_info.moid }}"
+        switch: "{{ vcenter_datacenter }}-dvswitch"
+        start_connected: yes
+        vlan_id: "{{ adapter.vnic_profile.network.vlan.id }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
       loop_control:
         label: "{{adapter.name}}"
         index_var: loop_index
