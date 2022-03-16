@@ -118,7 +118,7 @@
             pattern: "{{ inventory_hostname }}"
             follows:
               - disk_attachments.disk
-              - nics.vnic_profile
+              - nics.vnic_profile.network
           register: rhv_vm
         - set_fact: vm_name="{{rhv_vm.ovirt_vms[0].name}}"
 
