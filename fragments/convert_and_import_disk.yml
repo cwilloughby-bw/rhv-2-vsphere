@@ -27,8 +27,11 @@
     poll: 0
     register: async_conversion
 
-  - name: Poll image conversion process
-    include_tasks: fragments/poll_image_conversion_process.yml
+  - name: Check on disk conversion process
+    async_status:
+      jid: "{{ async_conversion.ansible_job_id }}"
+    delegate_to: "{{ groups['rhvhost'][0] }}"
+    register: async_conversion_result
     until: async_conversion_result.finished
 ## Should keep checking for up to an hour, check every 30 seconds
     retries: 240

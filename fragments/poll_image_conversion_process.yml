@@ -1,9 +1,0 @@
-- name: Check on disk conversion process
-  async_status:
-    jid: "{{ async_conversion.ansible_job_id }}"
-  delegate_to: "{{ groups['rhvhost'][0] }}"
-  register: async_conversion_result
-
-- debug:
-    msg:
-      - "Currently converting image {{item.id}}, current progress: {{ async_conversion_result.stdout_lines[-1] }}"
