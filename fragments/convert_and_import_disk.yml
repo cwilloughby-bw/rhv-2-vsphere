@@ -10,7 +10,7 @@
     delegate_to: "{{ groups['rhvhost'][0] }}"
     register: source_qemu_image_info
 ## Output is JSON by default. This might not actually matter.
-  - set_fact: source_qemu_image_info_yaml="{{ source_qemu_image_info.stdout | to_yaml }}"
+  - set_fact: source_qemu_image_info_yaml="{{ source_qemu_image_info.stdout | trim | to_yaml }}"
 
   - name: Debug pre-conversion
     debug:
