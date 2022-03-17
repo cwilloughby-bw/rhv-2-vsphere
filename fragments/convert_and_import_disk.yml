@@ -9,7 +9,6 @@
     ansible.builtin.shell: "qemu-img info --output json /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
     delegate_to: "{{ groups['rhvhost'][0] }}"
     register: source_qemu_image_info
-## Output is JSON by default. This might not actually matter.
   - set_fact: source_qemu_image_info="{{ source_qemu_image_info.stdout | trim | from_json }}"
 
   - name: Debug pre-conversion
