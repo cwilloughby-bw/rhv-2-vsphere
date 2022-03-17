@@ -10,14 +10,14 @@
     delegate_to: "{{ groups['rhvhost'][0] }}"
     register: source_qemu_image_info
 ## Output is JSON by default. This might not actually matter.
-  - set_fact: source_qemu_image_info_yaml="{{ source_qemu_image_info.stdout | trim | to_yaml }}"
+  - set_fact: source_qemu_image_info="{{ source_qemu_image_info.stdout | trim | from_json }}"
 
   - name: Debug pre-conversion
     debug:
       msg: 
         - "Processing image: /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
         - "Output image: /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
-        - "Source QEMU Image Info: {{ source_qemu_image_info.stdout }}"
+        - "Source QEMU Image Info: {{ source_qemu_image_info }}"
 
   - name: Convert disk from RAW to VMDK
     shell: "/usr/bin/qemu-img convert -f {{ source_qemu_image_info_yaml.format }} -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
