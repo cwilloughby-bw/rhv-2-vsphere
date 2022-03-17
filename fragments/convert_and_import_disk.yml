@@ -4,14 +4,24 @@
 ## "-pre" is suffixed here to indicate that it's pre-inflation. In testing, the inflation is required
 ## to be usable in VMWare. Supposedly it's not always required, but better safe than sorry.
 ## The image should be thinned back out once we do the storage vmotion anyways.
-  - name: Debug disk image path
+
+  - name: Collect info about source image
+    ansible.builtin.shell: "qemu-img info --output json /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
+    delegate_to: "{{ groups['rhvhost'][0] }}"
+    register: source_qemu_image_info
+## Output is JSON by default. This might not actually matter.
+  - set_fact: source_qemu_image_info_yaml="{{ source_qemu_image_info | to_yaml }}"
+
+  - name: Debug pre-conversion
     debug:
       msg: 
         - "Processing image: /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
         - "Output image: /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
+        - "Source QEMU Image Info: {{ source_qemu_image_info }}"
+
 
   - name: Convert disk from RAW to VMDK
-    shell: "time /usr/bin/qemu-img convert -f raw -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
+    shell: "/usr/bin/qemu-img convert -f {{ source_qemu_image_info_yaml.format }} -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
     delegate_to: "{{ groups['rhvhost'][0] }}"
 ## Async allowed up to 1 hour, might need to be manually increased for larger images.
     async: 7200
@@ -45,7 +55,7 @@
   - name: Show migration stage 1 diagnostic info
     debug:
       msg:
-        - "Real time taken to perform RAW to VMDK disk conversion: {{ async_conversion_result.stderr_lines[1] }}"
+        - "Real time taken to perform RAW to VMDK disk conversion: {{ async_conversion_result.delta }}"
         - "Original RAW image size (KB): {{ disk_raw_stats.stat.size / 1024 }}"
         - "Pre-Inflation VMDK image size (KB): {{ disk_pre_vmdk_stats.stat.size / 1024 }}"
 
