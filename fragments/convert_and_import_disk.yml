@@ -17,6 +17,7 @@
         - "Processing image: /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}}"
         - "Output image: /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
         - "Source QEMU Image Info: {{ source_qemu_image_info }}"
+        - "Image Alias: {{ item.disk.alias }}"
 
   - name: Convert disk from RAW to VMDK
     shell: "/usr/bin/qemu-img convert -f {{ source_qemu_image_info.format }} -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
