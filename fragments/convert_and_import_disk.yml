@@ -20,7 +20,7 @@
         - "Image Alias: {{ item.disk.alias }}"
 
   - name: Convert disk from RAW to VMDK
-    shell: "/usr/bin/qemu-img convert -f {{ source_qemu_image_info.format }} -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
+    shell: "/usr/bin/qemu-img convert -f {{ source_qemu_image_info.format }} -O vmdk -o adapter_type=lsilogic,subformat=monolithicSparse,compat6 -p /rhev/data-center/{{rhv_vm_datacenter_id}}/{{item.disk.storage_domains[0].id}}/images/{{item.id}}/{{item.disk.image_id}} /mnt/vmware_migration/{{vm_name}}-disk{{loop_index}}-pre.vmdk"
     delegate_to: "{{ groups['rhvhost'][0] }}"
 ## Async allowed up to 1 hour, might need to be manually increased for larger images.
     async: 7200
