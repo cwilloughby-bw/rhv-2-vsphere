@@ -48,7 +48,7 @@
 
     - name: Add discovered VM to inventory
       ansible.builtin.add_host:
-        name: "{{ preload_rhv_vm.ovirt_vms[0].name }}"
+        name: "{{ source_vm_name }}"
         groups:
           - vmsToMigrate
         rhv_data: preload_rhv_vm.ovirt_vms[0]
