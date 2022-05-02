@@ -44,13 +44,14 @@
           likely due to a prior CPU/RAM adjustment. 
           We'll attampt to handle this ourselves by cleanly powering down the machine,
           but if that fails, you may need to manually reboot your VM, and re-run this tool.'
-      when: preload_rhv_vm.next_run_configuration_exists | bool
+      when: preload_rhv_vm.ovirt_vms[0].next_run_configuration_exists | bool
 
     - name: Add discovered VM to inventory
       ansible.builtin.add_host:
-        name: "{{ source_vm_name }}"
+        name: "{{ preload_rhv_vm.ovirt_vms[0].name }}"
         groups:
           - vmsToMigrate
+        rhv_data: preload_rhv_vm.ovirt_vms[0]
 
 - name: Mount vmware_migration volume
   hosts: rhvhost
