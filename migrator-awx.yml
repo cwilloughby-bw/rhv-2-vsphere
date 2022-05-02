@@ -26,7 +26,7 @@
 
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
-            pattern: "{{ source_vm_name }}"
+            pattern: "{{ source_vm_name }} and Status = up"
             next_run: true
           register: preload_rhv_vm
 
