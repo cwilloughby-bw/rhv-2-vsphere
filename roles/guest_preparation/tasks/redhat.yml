@@ -49,7 +49,3 @@
 ## Wipe learned python env so that AWX doesn't fail
 - name: Clear gathered facts
   meta: clear_facts
-
-- name: Shutdown Guest
-  community.general.shutdown:
-    msg: "VM shutdown after guest-preparation, pending VMWare upgrade."
