@@ -69,8 +69,11 @@
       wait_for:
         port: 22
         host: "{{ source_vm_name }}"
-        delay: 5
+        timeout: 10
       register: result
+
+    - debug:
+        msg: "{{ result }}"
 
     - name: Add discovered VM to inventory
       ansible.builtin.add_host:
