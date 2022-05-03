@@ -30,6 +30,7 @@
             follows:
               - disk_attachments.disk
               - nics.vnic_profile.network
+              - nics.reported_devices 
           register: preload_rhv_vm
 
       always:
