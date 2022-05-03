@@ -71,6 +71,7 @@
         host: "{{ source_vm_name }}"
         timeout: 10
       register: result
+      ignore_errors: true
 
     - debug:
         msg: "{{ result }}"
