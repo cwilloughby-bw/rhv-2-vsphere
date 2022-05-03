@@ -27,7 +27,9 @@
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
             pattern: "{{ source_vm_name }} and Status = up"
-            next_run: true
+            follows:
+              - disk_attachments.disk
+              - nics.vnic_profile.network
           register: preload_rhv_vm
 
       always:
