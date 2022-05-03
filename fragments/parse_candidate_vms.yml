@@ -40,7 +40,7 @@
   register: result_resolve_vm_name
   ignore_errors: true
 
-- name: 
+- name: Set VM name as reachable address
   set_fact: reachable_address = "{{ candidate_vm.ovirt_vms[0].name }}"
   when: not result_resolve_vm_name.failed
 
@@ -53,7 +53,7 @@
   ignore_errors: true
   when: (candidate_vm.ovirt_vms[0].fqdn | length > 0) and result_resolve_vm_name.failed
 
-- name: 
+- name: Set reported FQDN as reachable address
   set_fact: reachable_address = "{{ candidate_vm.ovirt_vms[0].name }}"
   when: (not result_resolve_vm_fqdn.failed) and result_resolve_vm_name.failed and (candidate_vm.ovirt_vms[0].fqdn | length > 0)
 
