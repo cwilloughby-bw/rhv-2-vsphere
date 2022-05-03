@@ -61,7 +61,7 @@
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
   loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements('reported_devices') }}"
   loop_control:
-    label: "{{item.1.address}}"
+    label: "{{item.1.name}}"
     loop_var: reported_device
   when: result_resolve_vm_fqdn.failed and result_resolve_vm_name.failed
 
