@@ -56,7 +56,7 @@
 - name: Mount vmware_migration volume
   hosts: rhvhost
   become: true
-  gather_facts: false
+  gather_facts: true
 
   tasks:
     - name: Create a directory for the vmware_migration volume
