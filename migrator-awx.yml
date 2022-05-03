@@ -37,6 +37,22 @@
             ovirt_auth: "{{ ovirt_auth }}"
           delegate_to: localhost
 
+    - name: Fail if no VMs found
+      ansible.builtin.fail:
+        msg: >
+          'No VMs were found matching the query. This could mean that you made a typo
+          when entering the hostname, the VM was already migrated, or that it was powered
+          off for other reason. Please make sure the name was entered correctly, and that
+          the target VM is powered up.'
+      when: preload_rhv_vm.ovirt_vms | length == 0
+
+    - name: Fail if more than 1 VM is found
+      ansible.builtin.fail:
+        msg: >
+          'More than 1 VM was returned from the search query. Please make sure the provided
+          hostname is specific to a single VM'
+      when: preload_rhv_vm.ovirt_vms | length > 1
+
     - name: Notify pending changes
       debug:
         msg: >
