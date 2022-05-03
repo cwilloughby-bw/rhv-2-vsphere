@@ -65,6 +65,10 @@
           but if that fails, you may need to manually reboot your VM, and re-run this tool.'
       when: preload_rhv_vm.ovirt_vms[0].next_run_configuration_exists | bool
 
+    - name: Check if provided name is resolvable
+      set_fact: reachable_address = "{{ lookup('community.general.dig', source_vm_name) }}"
+      when: lookup('community.general.dig', source_vm_name) != ""
+
     - name: Add discovered VM to inventory
       ansible.builtin.add_host:
         name: "{{ source_vm_name }}"
