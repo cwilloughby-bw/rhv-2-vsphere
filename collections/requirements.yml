@@ -1,3 +1,4 @@
 collections:
 - name: ovirt.ovirt
 - name: community.vmware
+- name: community.general
