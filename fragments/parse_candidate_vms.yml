@@ -59,7 +59,7 @@
 
 - name: Check reachability of reported addresses
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
-  loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements('reported_devices')[0] }}"
+  loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements('reported_devices') | flatten }}"
   loop_control:
     label: "{{item.1.name}}"
     loop_var: reported_device
