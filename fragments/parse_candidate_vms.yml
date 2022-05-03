@@ -62,7 +62,8 @@
   loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements('reported_devices') }}"
   loop_control:
     label: "{{item.1.address}}"
-  when: not reachable_address
+    loop_var: reported_device
+  when: result_resolve_vm_fqdn.failed and result_resolve_vm_name.failed
 
 - name: Fail if no reachable address
   ansible.builtin.fail:
