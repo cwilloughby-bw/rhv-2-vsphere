@@ -5,7 +5,7 @@
     - disk_attachments.disk
     - nics.vnic_profile.network
     - nics.reported_devices 
-register: candidate_vm
+  register: candidate_vm
 
 - name: Fail if more than 1 VM is found
   ansible.builtin.fail:

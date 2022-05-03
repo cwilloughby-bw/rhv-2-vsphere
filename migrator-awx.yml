@@ -24,7 +24,7 @@
             insecure: true
           delegate_to: localhost
 
-        - name: Convert and Attach disks to target VM
+        - name: Parse list of candidate VMs
           include_tasks: fragments/parse_candidate_vms.yml
           loop: "{{ source_vm_name.split(',') }}"
           loop_control:
