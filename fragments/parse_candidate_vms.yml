@@ -1,0 +1,80 @@
+- ovirt.ovirt.ovirt_vm_info:
+  auth: "{{ ovirt_auth }}"
+  pattern: "{{ source_vm_name }} and Status = up"
+  follows:
+    - disk_attachments.disk
+    - nics.vnic_profile.network
+    - nics.reported_devices 
+register: candidate_vm
+
+- name: Fail if more than 1 VM is found
+  ansible.builtin.fail:
+    msg: >
+      'More than 1 VM was returned from the search query. Please make sure the provided
+      hostname is specific to a single VM'
+  when: candidate_vm.ovirt_vms | length > 1
+
+- name: Fail if no VMs found
+  ansible.builtin.fail:
+    msg: >
+      'No VMs were found matching the query. This could mean that you made a typo
+      when entering the hostname, the VM was already migrated, or that it was powered
+      off for other reason. Please make sure the name was entered correctly, and that
+      the target VM is powered up.'
+  when: candidate_vm.ovirt_vms | length == 0
+
+- name: Notify pending changes
+  debug:
+    msg: >
+      'This VM is marked as having a "Next Run Configuration", 
+      likely due to a prior CPU/RAM adjustment. 
+      We'll attampt to handle this ourselves by cleanly powering down the machine,
+      but if that fails, you may need to manually reboot your VM, and re-run this tool.'
+  when: candidate_vm.ovirt_vms[0].next_run_configuration_exists | bool
+
+- name: Check if VM name is reachable
+  wait_for:
+    port: 22
+    host: "{{ candidate_vm.ovirt_vms[0].name }}"
+    timeout: 10
+  register: result_resolve_vm_name
+  ignore_errors: true
+
+- name: 
+  set_fact: reachable_address = "{{ candidate_vm.ovirt_vms[0].name }}"
+  when: not result_resolve_vm_name.failed
+
+- name: Check if FQDN is reachable
+  wait_for:
+    port: 22
+    host: "{{ candidate_vm.ovirt_vms[0].fqdn }}"
+    timeout: 10
+  register: result_resolve_vm_fqdn
+  ignore_errors: true
+  when: (candidate_vm.ovirt_vms[0].fqdn | length > 0) and not reachable_address
+
+- name: 
+  set_fact: reachable_address = "{{ candidate_vm.ovirt_vms[0].name }}"
+  when: (not result_resolve_vm_fqdn.failed) and result_resolve_vm_name.failed and (candidate_vm.ovirt_vms[0].fqdn | length > 0)
+
+- name: Check reachability of reported addresses
+  include_tasks: fragments/check_reacability_of_reported_addresses.yml
+  loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements("reported_devices[0].ips") }}"
+  loop_control:
+    label: "{{item.1.address}}"
+  when: not reachable_address
+
+- name: Fail if no reachable address
+  ansible.builtin.fail:
+    msg: >
+      'Failed to find a reachable address for the VM. Please ensure that the appropriate DNS
+      entries are in place, that the VMs Guest Tools are working appropriately, and that the 
+      ansible control host can reach the VM (No firewalls/etc).'
+
+- name: Add discovered VM to inventory
+  ansible.builtin.add_host:
+    name: "{{ source_vm_name }}"
+    groups:
+      - vmsToMigrate
+    rhv_data: candidate_vm.ovirt_vms[0]
+    ansible_host: reachable_address
