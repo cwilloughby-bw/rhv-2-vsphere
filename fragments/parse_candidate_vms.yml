@@ -51,7 +51,7 @@
     timeout: 10
   register: result_resolve_vm_fqdn
   ignore_errors: true
-  when: (candidate_vm.ovirt_vms[0].fqdn | length > 0) and not reachable_address
+  when: (candidate_vm.ovirt_vms[0].fqdn | length > 0) and result_resolve_vm_name.failed
 
 - name: 
   set_fact: reachable_address = "{{ candidate_vm.ovirt_vms[0].name }}"
@@ -59,7 +59,7 @@
 
 - name: Check reachability of reported addresses
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
-  loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements('reported_devices[0].ips') }}"
+  loop: "{{ candidate_vm.ovirt_vms[0].nics | subelements('reported_devices') | subelements('ips') }}"
   loop_control:
     label: "{{item.1.address}}"
   when: not reachable_address
