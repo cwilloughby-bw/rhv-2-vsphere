@@ -1,10 +1,10 @@
 - ovirt.ovirt.ovirt_vm_info:
-  auth: "{{ ovirt_auth }}"
-  pattern: "{{ source_vm_name }} and Status = up"
-  follows:
-    - disk_attachments.disk
-    - nics.vnic_profile.network
-    - nics.reported_devices 
+    auth: "{{ ovirt_auth }}"
+    pattern: "{{ source_vm_name }} and Status = up"
+    follows:
+      - disk_attachments.disk
+      - nics.vnic_profile.network
+      - nics.reported_devices 
   register: candidate_vm
 
 - name: Fail if more than 1 VM is found
