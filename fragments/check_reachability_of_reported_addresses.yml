@@ -7,5 +7,6 @@
   ignore_errors: true
 
 - name: 
-  set_fact: reachable_address = "{{ address.address }}"
+  set_fact: 
+    reachable_address: "{{ address.address }}"
   when: not result_resolve_vm_address.failed
