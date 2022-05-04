@@ -104,15 +104,8 @@
           register: rhv_vm
         - set_fact: vm_name="{{rhv_vm.ovirt_vms[0].name}}"
 
-## All this, just to get the datacenter ID, which should've just been included in the VM response
-        - ovirt.ovirt.ovirt_cluster_info:
-            auth: "{{ ovirt_auth }}"
-          register: rhv_clusters
-        - set_fact: rhv_vm_datacenter_id="{{item.data_center.id}}"
-          loop: "{{ rhv_clusters.ovirt_clusters }}"
-          loop_control:
-            label: "{{item.name}}"
-          when: item.id == rhv_vm.ovirt_vms[0].cluster.id
+        - set_fact: 
+            rhv_vm_datacenter_id: "{{ rhv_data.cluster.data_center.id }}"
 
       always:
         - name: Always revoke the SSO token
@@ -130,15 +123,15 @@
         datastore: "{{ vcenter_datastore }}"
         datacenter: "{{ vcenter_datacenter }}"
         cluster: "{{ vcenter_cluster }}"
-        name: "{{ rhv_vm.ovirt_vms[0].name }}"
+        name: "{{ rhv_data.name }}"
         guest_id: centos64Guest
         hardware:
           boot_firmware: bios
           hotadd_cpu: yes
           hotadd_memory: yes
           # yOu HaVe A pRoBlEm WiTh PrEcIsIoN?
-          memory_mb: "{{ (rhv_vm.ovirt_vms[0].memory / 1024 / 1024) | int }}"
-          num_cpus: "{{ rhv_vm.ovirt_vms[0].cpu.topology.sockets }}"
+          memory_mb: "{{ (rhv_data.memory / 1024 / 1024) | int }}"
+          num_cpus: "{{ rhv_data.cpu.topology.sockets }}"
           scsi: paravirtual
       register: vmware_vm
     - set_fact: vmware_vm_info="{{vmware_vm.instance}}"
@@ -154,7 +147,7 @@
         switch: "{{ vcenter_datacenter }}-dvswitch"
         start_connected: yes
         vlan_id: "{{ adapter.vnic_profile.network.vlan.id }}"
-      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop: "{{ rhv_data.nics }}"
       loop_control:
         label: "{{adapter.name}}"
         index_var: loop_index
@@ -176,7 +169,7 @@
             password: "{{ rhv_password }}"
             insecure: true
           comment: "Pending vSphere Migration"
-          name: "{{ vm_name }}"
+          id: "{{ rhv_data.id }}"
         delegate_to: localhost
       - name: Stop the source VM
         ovirt.ovirt.ovirt_vm:
@@ -186,7 +179,7 @@
             password: "{{ rhv_password }}"
             insecure: true
           state: stopped
-          name: "{{ vm_name }}"
+          id: "{{ rhv_data.id }}"
         delegate_to: localhost
 
       - name: Convert and Attach disks to target VM
@@ -216,7 +209,7 @@
             password: "{{ rhv_password }}"
             insecure: true
           comment: "Migrated to vSphere"
-          name: "{{ vm_name }}"
+          id: "{{ rhv_data.id }}"
         delegate_to: localhost
       rescue:
         - name: Start source VM due to migration failure
@@ -227,7 +220,7 @@
               password: "{{ rhv_password }}"
               insecure: true
             state: running
-            name: "{{ vm_name }}"
+            id: "{{ rhv_data.id }}"
           delegate_to: localhost
         - name: Annotate the source VM
           ovirt.ovirt.ovirt_vm:
