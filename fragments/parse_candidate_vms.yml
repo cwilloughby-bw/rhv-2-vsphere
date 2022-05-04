@@ -57,15 +57,12 @@
   set_fact: reachable_address = "{{ candidate_vm.ovirt_vms[0].name }}"
   when: (not result_resolve_vm_fqdn.failed) and result_resolve_vm_name.failed and (candidate_vm.ovirt_vms[0].fqdn | length > 0)
 
-- debug:
-    msg: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | map(attribute='ips') }}"
-
 - name: Check reachability of reported addresses
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
-  loop: "{{ candidate_vm.ovirt_vms[0].nics }}"
+  loop: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | map(attribute='ips') }}"
   loop_control:
-    label: "{{nic.name}}"
-    loop_var: nic
+    # label: "{{nic.name}}"
+    loop_var: address
   when: result_resolve_vm_fqdn.failed and result_resolve_vm_name.failed
 
 - name: Fail if no reachable address
