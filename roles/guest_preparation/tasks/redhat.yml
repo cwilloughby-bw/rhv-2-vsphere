@@ -49,6 +49,3 @@
 ## Wipe learned python env so that AWX doesn't fail
 - name: Clear gathered facts
   meta: clear_facts
-
-- name: Shutdown guest after migration preparation
-  ansible.builtin.shell: 'shutdown now'
