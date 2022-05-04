@@ -75,7 +75,7 @@
         id: "{{ rhv_data.id }}"
       delegate_to: localhost
       become: false
-      when: rhv_data.comment is not "Preparing vSphere Migration"
+      when: rhv_data.comment != "Preparing vSphere Migration"
 
     - name: Run guest-specific migration preparation
       ansible.builtin.include_role:
@@ -172,7 +172,7 @@
           comment: "Pending vSphere Migration"
           id: "{{ rhv_data.id }}"
         delegate_to: localhost
-        when: rhv_data.comment is not "Pending vSphere Migration"
+        when: rhv_data.comment != "Pending vSphere Migration"
 
       - name: Stop the source VM
         ovirt.ovirt.ovirt_vm:
@@ -234,7 +234,7 @@
               insecure: true
             comment: "Migration to vSphere failed"
             name: "{{ vm_name }}"
-            when: rhv_data.comment is not "Migration to vSphere failed"
+            when: rhv_data.comment != "Migration to vSphere failed"
           delegate_to: localhost
         - ansible.builtin.fail:
             msg: "Something went wrong while attempting to migrate {{ vm_name }}, the source VM has been powered back up."
