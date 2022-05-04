@@ -23,7 +23,6 @@
             password: "{{ rhv_password }}"
             insecure: true
           delegate_to: localhost
-          become: false
 
         - name: Parse list of candidate VMs
           include_tasks: fragments/parse_candidate_vms.yml
@@ -74,6 +73,7 @@
         comment: "Preparing vSphere Migration"
         name: "{{ rhv_data.name }}"
       delegate_to: localhost
+      become: false
 
     - name: Run guest-specific migration preparation
       ansible.builtin.include_role:
