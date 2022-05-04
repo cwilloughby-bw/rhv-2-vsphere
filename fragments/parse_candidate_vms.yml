@@ -61,6 +61,10 @@
   debug:
     msg: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | list | flatten }}"
 
+- name: Debug - Map-list of "ips" of "reported devices"
+  debug:
+    msg: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | list | flatten | map(attribute='ips') | list }}"
+
 - name: Check reachability of reported addresses
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
   loop: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | map(attribute='ips') | list }}"
