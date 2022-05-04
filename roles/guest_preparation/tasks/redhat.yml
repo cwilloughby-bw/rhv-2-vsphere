@@ -46,6 +46,9 @@
     regexp: "dyndns_iface = eth0"
     replace: "dyndns_iface = ens192"
 
+- name: Shutdown guest after migration preparation
+  ansible.builtin.shell: 'shutdown now'
+
 ## Wipe learned python env so that AWX doesn't fail
 - name: Clear gathered facts
   meta: clear_facts
