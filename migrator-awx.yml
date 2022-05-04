@@ -64,14 +64,15 @@
   gather_facts: true
 
   tasks:
-    - ovirt.ovirt.ovirt_vm:
+    - name: Set "Preparing vSphere Migration" comment on VM
+      ovirt.ovirt.ovirt_vm:
         auth:
           url: "{{ rhv_endpoint }}"
           username: "{{ rhv_username }}@{{ rhv_domain }}"
           password: "{{ rhv_password }}"
           insecure: true
         comment: "Preparing vSphere Migration"
-        name: "{{ rhv_data.name }}"
+        id: "{{ rhv_data.id }}"
       delegate_to: localhost
       become: false
 
