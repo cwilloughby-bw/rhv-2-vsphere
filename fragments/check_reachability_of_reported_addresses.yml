@@ -5,8 +5,7 @@
     timeout: 10
   register: result_resolve_vm_address
   ignore_errors: true
-  when: "not {{ reachable_address | default('') }}"
 
 - name: 
   set_fact: reachable_address = "{{ address.address }}"
-  when: "not result_resolve_vm_address.failed and not {{ reachable_address | default('') }}"
+  when: not result_resolve_vm_address.failed
