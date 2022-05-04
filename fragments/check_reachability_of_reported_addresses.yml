@@ -1,15 +1,12 @@
-# - name: Check if address is reachable
-#   wait_for:
-#     port: 22
-#     host: "{{ item.1.ip }}"
-#     timeout: 10
-#   register: result_resolve_vm_address
-#   ignore_errors: true
-#   when: not reachable_address
+- name: Check if address is reachable
+  wait_for:
+    port: 22
+    host: "{{ address.address }}"
+    timeout: 10
+  register: result_resolve_vm_address
+  ignore_errors: true
+  when: not reachable_address
 
-# - name: 
-#   set_fact: reachable_address = "{{ item.1.ip }}"
-#   when: not result_resolve_vm_address.failed and not reachable_address
-
-- debug:
-    msg: "{{ address.address }}"
+- name: 
+  set_fact: reachable_address = "{{ address.address }}"
+  when: not result_resolve_vm_address.failed and not reachable_address
