@@ -51,5 +51,4 @@
   meta: clear_facts
 
 - name: Shutdown guest after migration preparation
-  community.general.shutdown:
-    msg: "Shutting down system in preparation for VMWare migration"
+  ansible.builtin.shell: 'shutdown now'
