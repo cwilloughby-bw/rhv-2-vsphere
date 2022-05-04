@@ -4,7 +4,8 @@
     follows:
       - disk_attachments.disk
       - nics.vnic_profile.network
-      - nics.reported_devices 
+      - nics.reported_devices
+      - cluster
   register: candidate_vm
 
 - name: Fail if more than 1 VM is found
