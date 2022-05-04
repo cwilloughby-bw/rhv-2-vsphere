@@ -37,7 +37,6 @@
             ovirt_auth: "{{ ovirt_auth }}"
           delegate_to: localhost
 
-
 - name: Mount vmware_migration volume
   hosts: rhvhost
   become: true
@@ -65,6 +64,16 @@
   gather_facts: true
 
   tasks:
+    - ovirt.ovirt.ovirt_vm:
+        auth:
+          url: "{{ rhv_endpoint }}"
+          username: "{{ rhv_username }}@{{ rhv_domain }}"
+          password: "{{ rhv_password }}"
+          insecure: true
+        comment: "Preparing vSphere Migration"
+        name: "{{ rhv_data.name }}"
+      delegate_to: localhost
+
     - name: Run guest-specific migration preparation
       ansible.builtin.include_role:
         name: guest_preparation
