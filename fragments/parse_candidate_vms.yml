@@ -1,6 +1,6 @@
 - ovirt.ovirt.ovirt_vm_info:
     auth: "{{ ovirt_auth }}"
-    pattern: "{{ source_vm_name }} and Status = up"
+    pattern: "{{ item }} and Status = up"
     follows:
       - disk_attachments.disk
       - nics.vnic_profile.network
