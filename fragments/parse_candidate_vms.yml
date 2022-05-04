@@ -58,10 +58,7 @@
   when: (not result_resolve_vm_fqdn.failed) and result_resolve_vm_name.failed and (candidate_vm.ovirt_vms[0].fqdn | length > 0)
 
 - debug:
-    msg: "{{ candidate_vm.ovirt_vms[0].nics }}"
-
-- debug:
-    msg: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | list }}"
+    msg: "{{ candidate_vm.ovirt_vms[0].nics | map(attribute='reported_devices') | list | map(attribute="ips") | list }}"
 
 - name: Check reachability of reported addresses
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
