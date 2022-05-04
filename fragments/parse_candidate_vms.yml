@@ -73,6 +73,7 @@
       'Failed to find a reachable address for the VM. Please ensure that the appropriate DNS
       entries are in place, that the VMs Guest Tools are working appropriately, and that the 
       ansible control host can reach the VM (No firewalls/etc).'
+  when: reachable_address is not defined
 
 - name: Add discovered VM to inventory
   ansible.builtin.add_host:
