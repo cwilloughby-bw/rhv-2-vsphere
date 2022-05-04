@@ -67,9 +67,6 @@
     reachable_address: ''
   when: result_resolve_vm_fqdn.failed and result_resolve_vm_name.failed and not reachable_address
 
-- debug:
-    msg: "{{ reachable_address }}"
-
 - name: Fail if no reachable address
   ansible.builtin.fail:
     msg: >
@@ -83,5 +80,5 @@
     name: "{{ source_vm_name }}"
     groups:
       - vmsToMigrate
-    rhv_data: candidate_vm.ovirt_vms[0]
-    ansible_host: reachable_address
+    rhv_data: "{{ candidate_vm.ovirt_vms[0] }}"
+    ansible_host: "{{ reachable_address }}"
