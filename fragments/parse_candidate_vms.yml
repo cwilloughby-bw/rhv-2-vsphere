@@ -58,7 +58,7 @@
 - name: Set reported FQDN as reachable address
   set_fact: 
     reachable_address: "{{ candidate_vm.ovirt_vms[0].fqdn }}"
-  when: (not result_resolve_vm_fqdn.failed) and result_resolve_vm_name.failed and (candidate_vm.ovirt_vms[0].fqdn | length > 0)
+  when: (not result_resolve_vm_fqdn.failed | default(true)) and result_resolve_vm_name.failed and (candidate_vm.ovirt_vms[0].fqdn | length > 0)
 
 - name: Check reachability of reported addresses
   include_tasks: fragments/check_reachability_of_reported_addresses.yml
