@@ -68,7 +68,7 @@
     loop_var: address
   vars:
     reachable_address: ''
-  when: result_resolve_vm_fqdn.failed and result_resolve_vm_name.failed and not reachable_address
+  when: (result_resolve_vm_fqdn.failed | default(true)) and (result_resolve_vm_name.failed | default(true)) and not reachable_address
 
 - name: Fail if no reachable address
   ansible.builtin.fail:
