@@ -234,7 +234,7 @@
               insecure: true
             comment: "Migration to vSphere failed"
             name: "{{ vm_name }}"
-            when: rhv_data.comment != "Migration to vSphere failed"
+          when: rhv_data.comment != "Migration to vSphere failed"
           delegate_to: localhost
         - ansible.builtin.fail:
             msg: "Something went wrong while attempting to migrate {{ vm_name }}, the source VM has been powered back up."
