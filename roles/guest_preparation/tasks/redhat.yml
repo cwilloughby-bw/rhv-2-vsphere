@@ -39,6 +39,12 @@
     state: absent
     regexp: '^HWADDR=\S{17}'
 
+- name: Remove uuid lines from ifcfg-ens192
+  ansible.builtin.lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-ens192
+    state: absent
+    regexp: '^UUID=.*$'
+
 ## Modify the sssd dyndns_iface variable
 - name: Backup existing sssd configuration
   ansible.builtin.copy:
