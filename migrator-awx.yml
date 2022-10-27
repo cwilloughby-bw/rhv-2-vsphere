@@ -59,20 +59,20 @@
         fstype: nfs
         opts: vers=3
 
-- name: Ensure SSH is enabled on target ESXi
-  hosts: localhost
-  gather_facts: false
+# - name: Ensure SSH is enabled on target ESXi
+#   hosts: localhost
+#   gather_facts: false
 
-  tasks:
-    - name: Start ssh setting for an ESXi Host
-      community.vmware.vmware_host_service_manager:
-        hostname: "{{ vcenter_endpoint }}"
-        username: "{{ vcenter_username }}"
-        password: "{{ vcenter_password }}"
-        validate_certs: false
-        esxi_hostname: "{{ groups['esxihost'][0] }}"
-        service_name: ssh
-        state: present
+#   tasks:
+#     - name: Start ssh setting for an ESXi Host
+#       community.vmware.vmware_host_service_manager:
+#         hostname: "{{ vcenter_endpoint }}"
+#         username: "{{ vcenter_username }}"
+#         password: "{{ vcenter_password }}"
+#         validate_certs: false
+#         esxi_hostname: "{{ groups['esxihost'][0] }}"
+#         service_name: ssh
+#         state: present
 
 - name: Prepare source VM for migration
   hosts: vmsToMigrate:!no_guest_preparation
