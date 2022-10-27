@@ -41,6 +41,7 @@
   hosts: rhvhost
   become: true
   gather_facts: true
+  tags: prepare_rhvh
 
   tasks:
     - name: Create a directory for the vmware_migration volume
@@ -57,6 +58,20 @@
         state: mounted
         fstype: nfs
         opts: vers=3
+
+- name: Ensure SSH is enabled on target ESXi
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Start ntpd setting for an ESXi Host
+      community.vmware.vmware_host_service_manager:
+        hostname: "{{ vcenter_endpoint }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        esxi_hostname: "{{ groups['esxihost'][0] }}"
+        service_name: sshd
+        state: present
 
 - name: Prepare source VM for migration
   hosts: vmsToMigrate:!no_guest_preparation
