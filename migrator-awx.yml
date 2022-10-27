@@ -64,11 +64,12 @@
   gather_facts: false
 
   tasks:
-    - name: Start ntpd setting for an ESXi Host
+    - name: Start sshd setting for an ESXi Host
       community.vmware.vmware_host_service_manager:
         hostname: "{{ vcenter_endpoint }}"
         username: "{{ vcenter_username }}"
         password: "{{ vcenter_password }}"
+        validate_certs: false
         esxi_hostname: "{{ groups['esxihost'][0] }}"
         service_name: sshd
         state: present
