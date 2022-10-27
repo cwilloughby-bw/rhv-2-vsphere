@@ -64,14 +64,14 @@
   gather_facts: false
 
   tasks:
-    - name: Start sshd setting for an ESXi Host
+    - name: Start ssh setting for an ESXi Host
       community.vmware.vmware_host_service_manager:
         hostname: "{{ vcenter_endpoint }}"
         username: "{{ vcenter_username }}"
         password: "{{ vcenter_password }}"
         validate_certs: false
         esxi_hostname: "{{ groups['esxihost'][0] }}"
-        service_name: sshd
+        service_name: ssh
         state: present
 
 - name: Prepare source VM for migration
