@@ -82,6 +82,6 @@
   ansible.builtin.add_host:
     name: "{{ item }}"
     groups:
-      - vmsToMigrate
+      - no_guest_preparation
     rhv_data: "{{ candidate_vm.ovirt_vms[0] }}"
     ansible_host: "{{ reachable_address }}"
