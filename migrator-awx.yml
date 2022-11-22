@@ -78,6 +78,8 @@
   hosts: vmsToMigrate:!no_guest_preparation
   become: true
   gather_facts: true
+  tags:
+    - guest_preparation
 
   tasks:
     - name: Set "Preparing vSphere Migration" comment on VM
