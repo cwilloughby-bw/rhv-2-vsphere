@@ -78,7 +78,7 @@
       disk:
         - filename: "[vmware_migration] {{vm_name}}-disk{{loop_index}}-post.vmdk"
           scsi_controller: 0
-          scsi_type: paravirtual
+          scsi_type: "{{ (windows_mode | default(false)) | ternary('lsilogicsas', 'paravirtual') }}"
           unit_number: "{{loop_index}}"
     delegate_to: localhost
 
