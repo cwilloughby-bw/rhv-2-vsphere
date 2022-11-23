@@ -143,7 +143,7 @@
         datacenter: "{{ vcenter_datacenter }}"
         cluster: "{{ vcenter_cluster }}"
         name: "{{ rhv_data.name }}"
-        guest_id: centos64Guest
+        guest_id: "{{ (windows_mode | default(false)) | ternary('windows8Server64Guest','centos64Guest') }}"
         hardware:
           boot_firmware: bios
           hotadd_cpu: yes
@@ -151,7 +151,7 @@
           # yOu HaVe A pRoBlEm WiTh PrEcIsIoN?
           memory_mb: "{{ (rhv_data.memory / 1024 / 1024) | int }}"
           num_cpus: "{{ rhv_data.cpu.topology.sockets }}"
-          scsi: paravirtual
+          scsi: "{{ (windows_mode | default(false)) | ternary('lsilogicsas', 'paravirtual') }}"
       register: vmware_vm
     - set_fact: vmware_vm_info="{{vmware_vm.instance}}"
       
@@ -219,7 +219,7 @@
           datacenter: "{{ vcenter_datacenter }}"
           name: "{{ vmware_vm_info.hw_name }}"
           state: poweredon
-          wait_for_ip_address: yes
+          wait_for_ip_address: "{{ (windows_mode | default(false)) | ternary('no', 'yes') }}"
         delegate_to: localhost
 
       - name: Annotate the source VM
