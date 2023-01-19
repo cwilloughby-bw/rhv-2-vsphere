@@ -70,6 +70,12 @@
     reachable_address: ''
   when: (result_resolve_vm_fqdn.failed | default(true)) and (result_resolve_vm_name.failed | default(true)) and not reachable_address
 
+## TODO: Wrap the logic above in a block, skip if targetting a Windows host
+- name: Set reachable_address manually for Windows hosts
+  set_fact:
+    reachable_address: "{{ candidate_vm.ovirt_vms[0].name }}"
+  when: ( windows_mode | default(false) )
+
 - name: Fail if no reachable address
   ansible.builtin.fail:
     msg: >
