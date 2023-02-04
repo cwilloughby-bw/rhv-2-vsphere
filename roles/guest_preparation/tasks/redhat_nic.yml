@@ -1,5 +1,5 @@
 - debug:
-    var: oldnic
+    msg: "{{ (oldnic.guest_dev | regex_search('eth[0-9]+$') | regex_search('[0-9]+$')) }}"
 
 - name: Calculate new device name, step 1
   set_fact:
