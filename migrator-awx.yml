@@ -165,7 +165,7 @@
         #label: "{{ item.name }}"
         label: "{{ item.mac.address }}"
     - debug:
-        msg: "{{ (guest_nics | selectattr('mac', 'equalto', item.mac.address)) }}"
+        msg: "{{ (guest_nics | selectattr('mac', 'equalto', item.mac.address)) | list }}"
       ignore_errors: true
       loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
       loop_control:
