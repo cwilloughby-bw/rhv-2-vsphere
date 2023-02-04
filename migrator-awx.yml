@@ -175,7 +175,7 @@
         vlan_id: "{{ adapter.vlan }}"
       loop: "{{ transferring_nics | sort(attribute='os_name') }}"
       loop_control:
-        label: "{{adapter.name}}"
+        label: "{{adapter.hv_name}}"
         index_var: loop_index
         loop_var: adapter
 
