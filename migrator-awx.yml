@@ -156,7 +156,37 @@
     - set_fact: vmware_vm_info="{{vmware_vm.instance}}"
 
     - debug:
-        var: guest_nics
+        msg: "{{ guest_nics }}"
+    - debug:
+        msg: "{{ item.mac.address }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop_control:
+        #label: "{{ item.name }}"
+        label: "{{ item.mac.address }}"
+    - debug:
+        msg: "{{ (((guest_nics | selectattr('mac', 'equalto', item.mac.address))) }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop_control:
+        #label: "{{ item.name }}"
+        label: "{{ item.mac.address }}"
+    - debug:
+        msg: "{{ (((guest_nics | selectattr('mac', 'equalto', item.mac.address))[0]) }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop_control:
+        #label: "{{ item.name }}"
+        label: "{{ item.mac.address }}"
+    - debug:
+        msg: "{{ (((guest_nics | selectattr('mac', 'equalto', item.mac.address))[0].guest_dev) }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop_control:
+        #label: "{{ item.name }}"
+        label: "{{ item.mac.address }}"
+    - debug:
+        msg: "{{ (((guest_nics | selectattr('mac', 'equalto', item.mac.address))[0].guest_dev) | default('ZZZ')) }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop_control:
+        #label: "{{ item.name }}"
+        label: "{{ item.mac.address }}"
     - name: Associate VM network adapters with OS network adapters
       set_fact:
         transferring_nics: "{{ (transferring_nics | default([])) + [ { 'mac': item.mac.address, 'hv_name': item.name, 'os_name': (((guest_nics | selectattr('mac', 'equalto', item.mac.address))[0].guest_dev) | default('ZZZ')), 'vlan': item.vnic_profile.network.vlan.id } ]  }}"
