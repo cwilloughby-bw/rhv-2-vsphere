@@ -2,31 +2,33 @@
   set_fact:
     oldnicindex: "{{ (oldnic.guest_dev | regex_search('eth[0-9]+$') | regex_search('[0-9]+$')) }}"
 
-- name: Calculate new device name, step 2
-  set_fact:
-    newdev: "ens{{ 160 + (32 * (((oldnicindex|int)+1) % 4)) + (((oldnicindex|int)+1) // 4) }}"
+- block:
+  when: oldnicindex
+  - name: Calculate new device name, step 2
+    set_fact:
+      newdev: "ens{{ 160 + (32 * (((oldnicindex|int)+1) % 4)) + (((oldnicindex|int)+1) // 4) }}"
 
-- name: Copy existing network configuration
-  ansible.builtin.copy:
-    remote_src: yes
-    src: "/etc/sysconfig/network-scripts/ifcfg-{{ oldnic.guest_dev }}"
-    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
+  - name: Copy existing network configuration
+    ansible.builtin.copy:
+      remote_src: yes
+      src: "/etc/sysconfig/network-scripts/ifcfg-{{ oldnic.guest_dev }}"
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
 
-## inb4 Bitt roasts me for not using an actual RegEx here
-- name: Update network adapter name in new configuration
-  ansible.builtin.replace:
-    path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
-    regexp: "{{ oldnic.guest_dev }}"
-    replace: "{{ newdev }}"
+  ## inb4 Bitt roasts me for not using an actual RegEx here
+  - name: Update network adapter name in new configuration
+    ansible.builtin.replace:
+      path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
+      regexp: "{{ oldnic.guest_dev }}"
+      replace: "{{ newdev }}"
 
-- name: Make sure the interface configuration doesn't have a hard-coded HWADDR
-  ansible.builtin.lineinfile:
-    path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
-    state: absent
-    regexp: '^HWADDR=\S{17}'
+  - name: Make sure the interface configuration doesn't have a hard-coded HWADDR
+    ansible.builtin.lineinfile:
+      path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
+      state: absent
+      regexp: '^HWADDR=\S{17}'
 
-- name: Remove uuid lines from ifcfg-ens192
-  ansible.builtin.lineinfile:
-    path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
-    state: absent
-    regexp: '^UUID=.*$'
+  - name: Remove uuid lines from ifcfg-ens192
+    ansible.builtin.lineinfile:
+      path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
+      state: absent
+      regexp: '^UUID=.*$'
