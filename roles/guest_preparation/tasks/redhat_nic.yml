@@ -3,7 +3,6 @@
     oldnicindex: "{{ (oldnic.guest_dev | regex_search('eth[0-9]+$') | regex_search('[0-9]+$')) }}"
 
 - block:
-  when: oldnicindex
   - name: Calculate new device name, step 2
     set_fact:
       newdev: "ens{{ 160 + (32 * (((oldnicindex|int)+1) % 4)) + (((oldnicindex|int)+1) // 4) }}"
@@ -32,3 +31,5 @@
       path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
       state: absent
       regexp: '^UUID=.*$'
+
+  when: oldnicindex
