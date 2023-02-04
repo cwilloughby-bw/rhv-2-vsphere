@@ -180,16 +180,12 @@
         index_var: loop_index
         loop_var: adapter
 
-    - meta: end_play
-
 - name: The Main Event
   hosts: vmsToMigrate
   gather_facts: false
   strategy: free
 
   tasks:
-    - meta: end_play
-
     - name: Start Migration
       block:
       - name: Annotate the source VM
