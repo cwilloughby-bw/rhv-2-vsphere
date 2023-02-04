@@ -1,10 +1,10 @@
 - name: Calculate new device name, step 1
   set_fact:
-    oldnicindex: "{{ (oldnic.guest_dev | regex_search('[[:digit:]]+$')) | int }}"
+    oldnicindex: "{{ (oldnic.guest_dev | regex_search('[[:digit:]]+$')) }}"
 
 - name: Calculate new device name, step 2
   set_fact:
-    newdev: "ens{{ 160 + (32 * ((oldnicindex+1) % 4)) + ((oldnicindex+1) // 4) }}"
+    newdev: "ens{{ 160 + (32 * (((oldnicindex|int)+1) % 4)) + (((oldnicindex|int)+1) // 4) }}"
 
 - name: Copy existing network configuration
   ansible.builtin.copy:
