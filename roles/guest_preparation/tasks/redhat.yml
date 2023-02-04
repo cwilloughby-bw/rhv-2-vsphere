@@ -39,7 +39,7 @@
   loop: "{{ ansible_facts.interfaces }}"
 
 - name: For each interface
-  include_tasks: "redhat-nic.yml"
+  include_tasks: "redhat_nic.yml"
   loop: "{{ guest_nics }}"
   loop_control:
     loop_var: oldnic
