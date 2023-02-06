@@ -32,4 +32,4 @@
       state: absent
       regexp: '^UUID=.*$'
 
-  when: (oldnic.guest_dev | regex_search('^eth[0-9]+$')) != ''
+  when: (oldnic.guest_dev | regex_search('^eth[0-9]+$')) != None
