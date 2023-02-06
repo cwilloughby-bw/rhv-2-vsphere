@@ -20,30 +20,30 @@
 ## and the target ended up having ens192. Sooooo, we just copy the config, and change the target
 ## interface name. This only sets up the first NIC, additional NICs will need someone to manually
 ## perform that process.
-- name: Copy existing network configuration
-  ansible.builtin.copy:
-    remote_src: yes
-    src: /etc/sysconfig/network-scripts/ifcfg-eth0
-    dest: /etc/sysconfig/network-scripts/ifcfg-ens192
+#
+## The mapping between eth0 and ens192 seems to be:
+##
+## ens = 160 + (32 * ((eth+1) mod 4)) + floor((eth+1) / 4)
+##
+## [ in python: ens = 160 + (32 * ((eth+1) % 4)) + ((enth+1) // 4) ]
+##
+## that is, starting at 160, add 32 for each subsequent interface, but when you pass 256,
+## start over, adding one to the previous starting point, but also skip the very first one
+#
+## In host facts, interfaces are listed in the array .interfaces
+## Interface details are in .[(.interfaces[N] | regex_replace('-','_'))] with MAC address at .macaddress
 
-## inb4 Bitt roasts me for not using an actual RegEx here
-- name: Update network adapter name in new configuration
-  ansible.builtin.replace:
-    path: /etc/sysconfig/network-scripts/ifcfg-ens192
-    regexp: eth0
-    replace: ens192
+- name: Compile OS NICs
+  set_fact:
+    guest_nics: "{{ (guest_nics | default([])) + [ { 'guest_dev': item, 'mac': (ansible_facts[(item | regex_replace('-','_'))].macaddress | default('')) } ] }}"
+  loop: "{{ ansible_facts.interfaces }}"
 
-- name: Make sure the interface configuration doesn't have a hard-coded HWADDR
-  ansible.builtin.lineinfile:
-    path: /etc/sysconfig/network-scripts/ifcfg-ens192
-    state: absent
-    regexp: '^HWADDR=\S{17}'
-
-- name: Remove uuid lines from ifcfg-ens192
-  ansible.builtin.lineinfile:
-    path: /etc/sysconfig/network-scripts/ifcfg-ens192
-    state: absent
-    regexp: '^UUID=.*$'
+- name: For each interface
+  include_tasks: "redhat_nic.yml"
+  loop: "{{ guest_nics }}"
+  loop_control:
+    loop_var: oldnic
+    label: "{{ oldnic.guest_dev }}"
 
 ## Modify the sssd dyndns_iface variable
 - name: Backup existing sssd configuration
@@ -57,6 +57,7 @@
     path: /etc/sssd/sssd.conf
     regexp: "dyndns_iface = eth0"
     replace: "dyndns_iface = ens192"
+
 
 ## Wipe learned python env so that AWX doesn't fail
 - name: Clear gathered facts

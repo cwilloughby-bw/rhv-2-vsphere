@@ -154,6 +154,14 @@
           scsi: "{{ (windows_mode | default(false)) | ternary('lsilogicsas', 'paravirtual') }}"
       register: vmware_vm
     - set_fact: vmware_vm_info="{{vmware_vm.instance}}"
+
+    - name: Associate VM network adapters with OS network adapters
+      set_fact:
+        transferring_nics: "{{ (transferring_nics | default([])) + [ { 'mac': item.mac.address, 'hv_name': item.name, 'os_name': ((((guest_nics | selectattr('mac', 'equalto', item.mac.address)) | list)[0].guest_dev) | default('ZZZ')), 'vlan': item.vnic_profile.network.vlan.id } ]  }}"
+      loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
+      loop_control:
+        #label: "{{ item.name }}"
+        label: "{{ item.mac.address }}"
       
     - name: Add network adapter to VM
       community.vmware.vmware_guest_network:
@@ -165,10 +173,10 @@
         moid: "{{ vmware_vm_info.moid }}"
         switch: "{{ vcenter_datacenter }}-dvswitch"
         start_connected: yes
-        vlan_id: "{{ adapter.vnic_profile.network.vlan.id }}"
-      loop: "{{ rhv_data.nics }}"
+        vlan_id: "{{ adapter.vlan }}"
+      loop: "{{ transferring_nics | sort(attribute='os_name') }}"
       loop_control:
-        label: "{{adapter.name}}"
+        label: "{{adapter.hv_name}}"
         index_var: loop_index
         loop_var: adapter
 
