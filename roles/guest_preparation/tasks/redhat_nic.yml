@@ -13,6 +13,12 @@
       src: "/etc/sysconfig/network-scripts/ifcfg-{{ oldnic.guest_dev }}"
       dest: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
 
+  - name: Copy any static routes
+    ansible.builtin.copy:
+      remote_src: yes
+      src: "/etc/sysconfig/network-scripts/route-{{ oldnic.guest_dev }}"
+      dest: "/etc/sysconfig/network-scripts/route-{{ newdev }}"
+
   ## inb4 Bitt roasts me for not using an actual RegEx here
   - name: Update network adapter name in new configuration
     ansible.builtin.replace:
@@ -26,7 +32,7 @@
       state: absent
       regexp: '^HWADDR=\S{17}'
 
-  - name: Remove uuid lines from ifcfg-ens192
+  - name: Remove uuid lines from ifcfg files
     ansible.builtin.lineinfile:
       path: "/etc/sysconfig/network-scripts/ifcfg-{{ newdev }}"
       state: absent
