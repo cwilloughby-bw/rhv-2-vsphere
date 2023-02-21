@@ -18,6 +18,7 @@
       remote_src: yes
       src: "/etc/sysconfig/network-scripts/route-{{ oldnic.guest_dev }}"
       dest: "/etc/sysconfig/network-scripts/route-{{ newdev }}"
+    ignore_errors: yes
 
   ## inb4 Bitt roasts me for not using an actual RegEx here
   - name: Update network adapter name in new configuration
