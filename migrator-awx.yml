@@ -157,7 +157,23 @@
 
     - name: Associate VM network adapters with OS network adapters
       set_fact:
-        transferring_nics: "{{ (transferring_nics | default([])) + [ { 'mac': item.mac.address, 'hv_name': item.name, 'os_name': ((((guest_nics | selectattr('mac', 'equalto', item.mac.address)) | list)[0].guest_dev) | default('ZZZ')), 'vlan': item.vnic_profile.network.vlan.id } ]  }}"
+        transferring_nics: "{{
+          (transferring_nics | default([])) +
+          [
+            {
+              'mac': item.mac.address,
+              'hv_name': item.name,
+              'os_name': (
+                (
+                  (
+                    (guest_nics | default([]) | selectattr('mac', 'equalto', item.mac.address)) | list
+                  )[0].guest_dev
+                ) | default('ZZZ')
+              ),
+              'vlan': item.vnic_profile.network.vlan.id
+            }
+          ]
+          }}"
       loop: "{{ rhv_vm.ovirt_vms[0].nics }}"
       loop_control:
         #label: "{{ item.name }}"
