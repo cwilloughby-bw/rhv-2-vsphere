@@ -162,6 +162,8 @@
       loop_control:
         #label: "{{ item.name }}"
         label: "{{ item.mac.address }}"
+      tags:
+        - dest_nic_config
       
     - name: Add network adapter to VM
       community.vmware.vmware_guest_network:
@@ -179,6 +181,8 @@
         label: "{{adapter.hv_name}}"
         index_var: loop_index
         loop_var: adapter
+      tags:
+        - dest_nic_config
 
 - name: The Main Event
   hosts: vmsToMigrate
