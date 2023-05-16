@@ -116,7 +116,7 @@
 
         - ovirt.ovirt.ovirt_vm_info:
             auth: "{{ ovirt_auth }}"
-            pattern: "{{ inventory_hostname }}"
+            pattern: "{{ inventory_hostname }} and Status = up"
             follows:
               - disk_attachments.disk
               - nics.vnic_profile.network
